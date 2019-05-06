@@ -19,7 +19,7 @@ server.get('/', (req, res) => {
 server.post('/api/register', (req, res) => {
     let user = req.body;
 
-    const hash = bcrypt.hashSync(user.password, 10);
+    const hash = bcrypt.hashSync(user.password, 12);
     user.password = hash;
 
     Users.add(user)
@@ -48,13 +48,23 @@ server.post('/api/login', (req, res) => {
         });
 });
 
-server.get('/api/users', (req, res) => {
+server.get('/api/users', protected, (req, res) => {
     Users.find()
         .then(users => {
             res.json(users);
         })
         .catch(err => res.send(err));
 });
+
+function protected(req, res, next) {
+    const { username, password } = req.headers;
+    if (username && password) {
+        next();
+    }
+    else {
+        res.status(400).json({ message: 'Invalid Credentials'})
+    }
+}
 
 const port = process.env.PORT || 5000;
 server.listen(port, () => console.log(`\n** Running on port ${port} **\n`));
